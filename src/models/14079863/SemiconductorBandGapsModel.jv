@@ -1,31 +1,3 @@
-/*
-This database is created from the paper cited as "Dong, Q., & Cole, J. M. (2022). Auto-generated database of semiconductor band gaps using chemdataextractor. Scientific Data, 9(1), 193.". This work presents an 
-auto-generated database of 100,236 semiconductor band gap records, extracted from 128,776 journal articles with their associated temperature information. The database was produced using 
-ChemDataExtractor version 2.0, a ‘chemistry-aware’ software toolkit. Evaluation of the database shows a weighted precision of 84% and a weighted recall of 65%.
-
-There were 100236 records in the database before the data engineering pipeline and only 29 records after executing the pipeline. The big difference in no. of rows is because of the fact that most of the rows in 
-the column "Composition" is null, which cannot be the case for this dataset. We have removed all such records where the "Composition" is null. Other than that for multiple rows like Temperature_value, Temperature_Unit, the values have shifted to the adjacent columns. As a result,
-we have treated all those rows as noise and filtered out all such data points. This is the major reason behind the reduction in no. of records before and after the pipeline.
-
-Our other changes include: removing opening ("[") and closing ("]") braces from the numerical values like "Value", "Temperature_Value", removeing "(" and ")" from "Raw_Unit", standardizing the DOI Reference column to
-a standard foramt of 10.1007/xxxx, and adding "AllowedListConstraint" to "TemperatureUnitType".
-
-All the changes have been mentioned in details right before the part of the code that is responsible to cause these changes in the pipeline.
-*/
-
-
-//     Removed white spaces from the Composition formula and kept only those rows in the format of {'element_scientific_name': units}
-constraint NonEmptyText oftype LengthConstraint {
-	minLength: 1;
-	maxLength: 9007199254740991;
-}
-valuetype Composition oftype text {
-	constraints: [
-		NonEmptyText
-	];
-}
-
-
 use {
 	BracesRemover
 } from "./../../shared/composite-blocktypes.jv";
@@ -94,7 +66,7 @@ pipeline SemiconductorBandGapsPipeline {
 		header: true;
 		columns: [
 			"Name" oftype text,
-			"Composition" oftype Composition,
+			"Composition" oftype text,
 			"Value" oftype text,
 			"Unit" oftype text,
 			"Raw_value" oftype text,
