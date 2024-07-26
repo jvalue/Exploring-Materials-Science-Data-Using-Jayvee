@@ -18,7 +18,7 @@ jobs:
         run: npm install -g @jvalue/jayvee-interpreter@0.6.0
 
       - name: Run and zip model
-        run: bash -x tools/scripts/process-model.bash src/models/battery-materials/BatteryMaterialsModel.jv
+        run: bash -x tools/scripts/process-model.bash src/models/battery-materials/model.jv
       - name: Upload result
         run: bash -x tools/scripts/release-model.bash build/battery-materials.zip
         env:
@@ -26,7 +26,7 @@ jobs:
           RELEASE_REF: ${{ github.ref }}
 
       - name: Run and zip model
-        run: bash -x tools/scripts/process-model.bash src/models/refractive-indices-dielectric-constants/refractiveIndicesAndDielectricConstantsModel.jv
+        run: bash -x tools/scripts/process-model.bash src/models/refractive-indices-dielectric-constants/model.jv
       - name: Upload result
         run: bash -x tools/scripts/release-model.bash build/refractive-indices-dielectric-constants.zip
         env:
@@ -34,7 +34,7 @@ jobs:
           RELEASE_REF: ${{ github.ref }}
 
       - name: Run and zip model
-        run: bash -x tools/scripts/process-model.bash src/models/semiconductor-band-gaps/SemiconductorBandGapsModel.jv
+        run: bash -x tools/scripts/process-model.bash src/models/semiconductor-band-gaps/model.jv
       - name: Upload result
         run: bash -x tools/scripts/release-model.bash build/semiconductor-band-gaps.zip
         env:
@@ -42,7 +42,7 @@ jobs:
           RELEASE_REF: ${{ github.ref }}
 
       - name: Run and zip model
-        run: bash -x tools/scripts/process-model.bash src/models/yield-strength-grain-size/YieldStrengthAndGrainSizeModel.jv
+        run: bash -x tools/scripts/process-model.bash src/models/yield-strength-grain-size/model.jv
       - name: Upload result
         run: bash -x tools/scripts/release-model.bash build/yield-strength-grain-size.zip
         env:
@@ -50,7 +50,7 @@ jobs:
           RELEASE_REF: ${{ github.ref }}
 
       - name: Run and zip model
-        run: bash -x tools/scripts/process-model.bash src/models/thermoelectric-materials/ThermoelectricMaterialsModel.jv
+        run: bash -x tools/scripts/process-model.bash src/models/thermoelectric-materials/model.jv
       - name: Upload result
         run: bash -x tools/scripts/release-model.bash build/thermoelectric-materials.zip
         env:
@@ -59,7 +59,7 @@ jobs:
 
       # This model does not work, see https://github.com/jvalue/jayvee/issues/603
       #- name: Run and zip model
-      #  run: bash -x tools/scripts/process-model.bash src/models/thermoelectric-materials-system-identified-material-representation/thermoelectricMaterials.jv && tools/scripts/process-model.bash src/models/KRICT_DATA/thermoelectricMaterialsModel.jv
+      #  run: bash -x tools/scripts/process-model.bash src/models/thermoelectric-materials-system-identified-material-representation/model.jv
       #- name: Upload result
       #  run: bash -x tools/scripts/release-model.bash build/thermoelectric-materials-system-identified-material-representation.zip
       #  env:
