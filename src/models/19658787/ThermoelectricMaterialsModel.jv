@@ -1,20 +1,3 @@
-/*
-The datasets used in this data engineering pipeline were taken from the paper Sierepeklis, O., & Cole, J. M. (2022). A thermoelectric materials database auto-generated from the scientific literature using ChemDataExtractor. Scientific Data, 9(1), 648. This is the first 
-automatically generated database of thermoelectric materials and their properties from existing literature. The database was evaluated to have a precision of 82.25%. Here we have 2 datasets, one is the Main dataset
-that contains all the properties of the thermoelectric-materials: "main_tedb.csv" and the other one contains the machine learning predictions of the ZT, Termal conductivity, Seebeck coefcient, Electrical conductivity
-& Power factor.
-
-The inf_tedb.csv has 18509 columns before this data pipeline & 18336 columns after the execution of the pipeline. The main_tedb.csv database had 19707 before & 14617 rows after the execution. The main difference in the 
-count of the rows is because a lot of the values in the main_tedb dataset was misplaced in different columns. As a result, after standardisation, all those records were filtered out. For example, temperature value
-was in ZT column and vice-versa. The changes that we introduced are changing a lot of dataypes, from text to appropriate ones. All the datatypes were text before. Secondly, we introduced a lot of constraints according to the
-theory of the paper, like we created an allow list for the models as well as model types, the temperature and the Access types. And we also standardized the doi format in this pipeline: 10.xxxx/yyyy.
-
-We also added transform blocks to remove the opening and closing braces from the Value column, so that it can be later treated as a numerical value, rather than a text. More details about all the changes have been
-mentioned right before the code that causes the change.
-*/
-
-// The standard format of doi in this paper and in general is 10.xxxx/xxxx, and we have kept that as a regexconstraint for the doi columns.
-
 use {
 	RemoveOpeningBrace,
 	RemoveClosingBrace
@@ -22,8 +5,13 @@ use {
 
 
 /*
-According to the paper, Each record contains a chemical entity and one of the seminal thermoelectric properties: thermoelectric fgure of merit, ZT; thermal conductivity, κ; Seebeck coefcient, S;
-electrical conductivity, σ; power factor, PF. Hence, we set an AllowConstraint on model.
+	Each record contains a chemical entity and one of the seminal thermoelectric properties:
+	- Thermoelectric figure of merit
+	- ZT
+	- thermal conductivity, κ
+	- Seebeck coefcient, S
+	- electrical conductivity, σ
+	- power factor, PF
 */
 constraint AllowedModels oftype AllowlistConstraint {
 	allowlist: [
@@ -40,10 +28,7 @@ valuetype Model oftype text {
 	];
 }
 
-/*
-The built-in framework of ChemDataExtractor was used to defne the necessary models types. The thermal conductivity has been mentioned to be only in (total, electronic, and lattice contributions). 
-refer to the paper (page: 3)
-*/
+// The thermal conductivity has been mentioned to be only in (total, electronic, and lattice contributions), see page 3.
 constraint AllowedModelTypes oftype AllowlistConstraint {
 	allowlist: [
 		"electronic",
@@ -58,7 +43,7 @@ valuetype ModelType oftype text {
 }
 
 
-// Access type is about the reference of the row. It can be either paid or open datasource. According to the paper, we have kept it open and payment. 
+// Access type of the source paper, has to be open or payment according to the paper.
 constraint AllowedAccessTypes oftype AllowlistConstraint {
 	allowlist: [
 		"open",
