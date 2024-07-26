@@ -38,7 +38,7 @@ publish transform TakeUntilComma {
 	textWithoutComma: textWithComma replace /,.*$/ with "";
 }
 
-// parse a decimal
+// Parse a text as decimal
 publish transform ParseDecimal {
 	from decText oftype text;
 	to dec oftype decimal;
