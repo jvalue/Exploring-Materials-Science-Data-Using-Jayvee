@@ -23,9 +23,15 @@ You can find an example use of the produced data in [example-materials-science-d
 Jayvee is a domain-specific language to make the creation of data pipelines more accessible, developed by the [JValue](https://jvalue.com/) team from the [Professorship for Open-Source Software](https://oss.cs.fau.de/) at the [Friedrich-Alexander-Universität Erlangen-Nürnberg](https://www.fau.eu/). Jayvee is open source and can be found at [https://jvalue.github.io/jayvee/](https://jvalue.github.io/jayvee/).
 
 ## The Software Campus
+![Logo Software Campus](./logos/logo-swc.jpg)
+
 The [Software Campus](https://softwarecampus.de/) is an accelerator for leadership talents providing funding and mentorship for doctoral students in computer science to complete a research project with an industry partner.
 
 The data pipelines in this repository were created as part of the Software Campus project 'JValue-OCDE-Case1'. The project was lead by Philip Heltweg ([https://heltweg.org](https://heltweg.org)) in cooperation with [Springer Materials](https://materials.springer.com/), a company of [Holtzbrinck Publishing Group](https://holtzbrinck.com/).
+
+![Logo Springer Materials](./logos/logo-springer-materials.svg)
+
+![Logo Holtzbrinck Publishing Group](./logos/logo-holtzbrinck.svg)
 
 ## Acknowledgements
 This research has been partially funded by the German Federal Ministry of Education and Research (BMBF) through grant 01IS17045 Software Campus 2.0 (Friedrich-Alexander-Universität Erlangen-Nürnberg) as part of the Software Campus project 'JValue-OCDE-Case1'. Responsibility for the content of this publication lies with the authors.
