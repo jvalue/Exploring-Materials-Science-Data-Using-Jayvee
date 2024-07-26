@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Append models to release
+
+on:
+  release:
+    types:
+      - created
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - name: Install jayvee interpreter
+        run: npm install -g @jvalue/jayvee-interpreter@0.6.0
+
+      - name: Run and zip model
+        run: bash -x tools/scripts/process-model.bash src/models/11888115/BatteryMaterialsModel.jv
+      - name: Upload result
+        run: bash -x tools/scripts/release-model.bash build/11888115.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_REF: ${{ github.ref }}
+
+      - name: Run and zip model
+        run: bash -x tools/scripts/process-model.bash src/models/12781142/refractiveIndicesAndDielectricConstantsModel.jv
+      - name: Upload result
+        run: bash -x tools/scripts/release-model.bash build/12781142.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_REF: ${{ github.ref }}
+
+      - name: Run and zip model
+        run: bash -x tools/scripts/process-model.bash src/models/14079863/SemiconductorBandGapsModel.jv
+      - name: Upload result
+        run: bash -x tools/scripts/release-model.bash build/14079863.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_REF: ${{ github.ref }}
+
+      - name: Run and zip model
+        run: bash -x tools/scripts/process-model.bash src/models/14946186/YieldStrengthAndGrainSizeModel.jv
+      - name: Upload result
+        run: bash -x tools/scripts/release-model.bash build/14946186.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_REF: ${{ github.ref }}
+
+      - name: Run and zip model
+        run: bash -x tools/scripts/process-model.bash src/models/19658787/ThermoelectricMaterialsModel.jv
+      - name: Upload result
+        run: bash -x tools/scripts/release-model.bash build/19658787.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_REF: ${{ github.ref }}
+
+      # This model does not work, see https://github.com/jvalue/jayvee/issues/603
+      #- name: Run and zip model
+      #  run: bash -x tools/scripts/process-model.bash src/models/KRICT_DATA/thermoelectricMaterials.jv && tools/scripts/process-model.bash src/models/KRICT_DATA/thermoelectricMaterialsModel.jv
+      #- name: Upload result
+      #  run: bash -x tools/scripts/release-model.bash build/KRICT_DATA.zip
+      #  env:
+      #    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #    RELEASE_REF: ${{ github.ref }}

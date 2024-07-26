@@ -1,0 +1,116 @@
+// XSLXInterpeter does not work, see https://github.com/jvalue/jayvee/issues/603
+
+/*
+These datasets are based on the paper cited as "Na, G. S., & Chang, H. (2022). A public database of thermoelectric materials and system-identified material representation for data-driven discovery. npj Computational Materials, 8(1), 214.". 
+The ESTM dataset covers 880 unique thermoelectric materials and provides five experimentally measured thermoelectric properties: Seebeck coefficient, electrical conductivity, thermal conductivity, power factor, and figure of merit (ZT)". 
+In this paper, a machine learning approach is devised through which the ZT values for different materials from unexplored material groups were predicted and R2-score from 0.13 to 0.71 in an extrapolation problem.
+
+Coming to the data engiineering pipeline, the earlier version had 5 sheets, but we removed the "results_extrapol_0.xlsx", "results_extrapol_1.xlsx" & "results_extrapol_2.xlsx", because they were the truncated versions of 
+"preds_sxgb.xlsx" and no new data. So, we have kept only "estm.xlsx" & "preds_sxgb.xlsx" & removed the other redundant datasets. There are a total of 5205 rows in both the datasets, before and after the pipeline is executed.
+Other changes that we made were changing the datatype of various columns. Previously all of them were text, whereas, we changed them to appropriate datatypes, as we saw fit. We have also introduced constraints on specific columns like 
+temperature & Thermal conductivity, where we mentioned the range of values that the columns can allow.
+
+We have also used Transform blocks on the Reference column to standardize the DOI URLs, so that all of them start with 10.xx.xxx instead of http://xxx or https://xxxx.
+
+All the changes have been discussed in details just before the part of the code that causes it.
+*/
+
+//In the paper the range of the temperature is mentioned to be between 10 & 1275 kelvin. So, we have kept that as the allowed range of the temperature.(refer to page 2)
+constraint TemperatureRange oftype RangeConstraint {
+	lowerBound: 10.0;
+	upperBound: 1275.0;
+}
+valuetype Temperature oftype decimal {
+	constraints:
+	[
+		TemperatureRange
+	];
+}
+
+//In the paper the range of the Thermal conductivity is mentioned to be between 0.07 & 77.16 W/mK and that is the allowed range for our datatype. (refer to page 2)
+constraint ThermalConductivityRange oftype RangeConstraint {
+	lowerBound: 0.07;
+	upperBound: 77.16;
+}
+valuetype ThermalConductivity oftype decimal {
+	constraints:
+	[
+		ThermalConductivityRange
+	];
+}
+
+
+pipeline ThermoElectricMaterialsPipeline {
+
+	ThermoElectricMaterialsESTMExtractor
+		-> ThermoElectricMaterialsESTMXLSXInterpreter
+		-> ThermoElectricMaterialsESTMSheetPicker
+		-> ThermoElectricMaterialsESTMTableInterpreter
+		-> DOIStandardizerBlock
+		-> ThermoElectricMaterialsESTMDatabaseLoader;
+
+	ThermoElectricMaterialsPredsSxgbExtractor
+		-> ThermoElectricMaterialsPredsSxgbXLSXInterpreter
+		-> ThermoElectricMaterialsPredsSxgbSheetPicker
+		-> ThermoElectricMaterialsPredsSxgbTableInterpreter
+		-> ThermoElectricMaterialsPredsSxgbDatabaseLoader;
+
+	block ThermoElectricMaterialsESTMExtractor oftype HttpExtractor {
+		url: "https://github.com/KRICT-DATA/SIMD/raw/main/dataset/estm.xlsx";
+	}
+
+	block ThermoElectricMaterialsPredsSxgbExtractor oftype HttpExtractor {
+		url: "https://github.com/KRICT-DATA/SIMD/raw/main/results/preds_sxgb.xlsx";
+	}
+
+	block ThermoElectricMaterialsESTMXLSXInterpreter oftype XLSXInterpreter { }
+
+	block ThermoElectricMaterialsPredsSxgbXLSXInterpreter oftype XLSXInterpreter { }
+
+	block ThermoElectricMaterialsESTMSheetPicker oftype SheetPicker {
+		sheetName: "Sheet1";
+	}
+
+	block ThermoElectricMaterialsPredsSxgbSheetPicker oftype SheetPicker {
+		sheetName: "Sheet1";
+	}
+
+	block DOIStandardizerBlock oftype DOIStandardizer {
+		doiColumn: 'reference';
+	}
+
+	block ThermoElectricMaterialsESTMTableInterpreter oftype TableInterpreter {
+		header: false;
+		columns: [
+			'Formula' oftype text,
+			'temperature_k' oftype Temperature,
+			'seebeck_coefficient(μV/K)' oftype decimal,
+			'electrical_conductivity(S/m)' oftype decimal,
+			'thermal_conductivity(W/mK)' oftype ThermalConductivity,
+			'power_factor(W/mK^2)' oftype text,
+			'ZT' oftype text,
+			'reference' oftype text,
+		];
+	}
+
+	block ThermoElectricMaterialsPredsSxgbTableInterpreter oftype TableInterpreter {
+		header: false;
+		columns: [
+			"Formula" oftype text,
+			"Temperature" oftype Temperature,
+			"Original_ZT" oftype text,
+			"Predicted_ZT" oftype decimal,
+			"Difference_in_Predictions" oftype decimal
+		];
+	}
+
+	block ThermoElectricMaterialsESTMDatabaseLoader oftype SQLiteLoader {
+		table: "ESTM";
+		file: "./ThermoElectricMaterialsDatabase.sqlite";
+	}
+
+	block ThermoElectricMaterialsPredsSxgbDatabaseLoader oftype SQLiteLoader {
+		table: "PredsSxgb";
+		file: "./ThermoElectricMaterialsDatabase.sqlite";
+	}
+}

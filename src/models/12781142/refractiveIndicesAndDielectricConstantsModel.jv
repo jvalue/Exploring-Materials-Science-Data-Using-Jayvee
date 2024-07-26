@@ -1,0 +1,108 @@
+/*
+This database is created from the paper cited as "Zhao, J., & Cole, J. M. (2022). A database of refractive indices and dielectric constants auto-generated using ChemDataExtractor. Scientific data, 9(1), 192.". In this paper,
+an optical property database of refractive indices and dielectric constants is presented, which comprises a total of 49,076 refractive index and 60,804 dielectric constant data records on 11,054 unique chemicals.
+The database was auto-generated using the state-of-the-art natural language processing software, ChemDataExtractor, using a corpus of 388,461 scientifc papers.
+
+The number of records before the data engineering pipeline is 109879 and afterwards is 11166. We have filtered with a standard DOI format, created allowed list constraints for Warning Flags, Property Type, changed multiple
+datatypes and also added transformer blocks to remove opening ("[") and closing ("]") braces in the values, to change it to only numbers.
+
+All the changes are mentioned in details just before the part of the code that causes the change.
+*/
+
+//     Warning Flags can either be "S" or "O" (reference: Page 7 in the original paper)
+constraint WarningFlagList oftype AllowlistConstraint {
+	allowlist: [
+		"S",
+		"O"
+	];
+}
+valuetype WarningFlag oftype text {
+	constraints:
+	[
+		WarningFlagList
+	];
+}
+
+//    This is an optical property database of refractive indices and dielectric constants (reference: Page 2 in the original paper)
+constraint PropertyTypeList oftype AllowlistConstraint {
+	allowlist: [
+		"Refractive Index",
+		"Dielectric Constant"
+	];
+}
+valuetype PropertyType oftype text {
+	constraints: [
+		PropertyTypeList
+	];
+}
+
+//     DateFormat constrained to either YYYY-MM-DD or DD/MM/YYYY
+// HINT: Date in shared is only YYYY-MM-DD
+constraint DateFormatRegex oftype RegexConstraint {
+	regex: /\b(?:\d{4}-\d{2}-\d{2}|(?:\d{1,2}\/){2}\d{4})\b/;
+}
+valuetype DateFormat oftype text {
+	constraints: [
+		DateFormatRegex
+	];
+}
+
+use {
+	BracesRemover
+} from "../../shared/composite-blocktypes.jv";
+
+pipeline RefractiveIndicesAndDielectricConstantsPipeline {
+
+	RefractiveIndicesAndDielectricConstantsExtractor
+		-> RefractiveIndicesAndDielectricConstantsTextFileInterpreter
+		-> RefractiveIndicesAndDielectricConstantsCSVInterpreter
+		-> RefractiveIndicesAndDielectricConstantsTableInterpreter
+		-> BracesRemover
+		-> RefractiveIndicesAndDielectricConstantsDatabaseLoader;
+
+
+	block RefractiveIndicesAndDielectricConstantsExtractor oftype HttpExtractor {
+		url: "https://figshare.com/ndownloader/files/33982973";
+	}
+
+	block RefractiveIndicesAndDielectricConstantsTextFileInterpreter oftype TextFileInterpreter { }
+
+	block RefractiveIndicesAndDielectricConstantsCSVInterpreter oftype CSVInterpreter {
+		delimiter: ",";
+		enclosing: '"';
+		enclosingEscape: '"';
+	}
+
+	block BracesRemover oftype BracesRemover {
+		columnWithBraces: 'values';
+	}
+
+	block RefractiveIndicesAndDielectricConstantsTableInterpreter oftype TableInterpreter {
+		header: true;
+		columns: [
+			"DOI" oftype DOI,
+			"Date" oftype DateFormat,
+			"Journal" oftype text,
+			"Title" oftype text,
+			"compound" oftype text,
+			"extracted_error" oftype text,
+			"extracted_value" oftype text,
+			"measurement_wavelength" oftype text,
+			"normalised_name" oftype text,
+			"raw_value" oftype text,
+			"specifier" oftype text,
+			"values" oftype text,
+			"warning" oftype WarningFlag,
+			"dielectric_loss" oftype text,
+			"measurement_frequency" oftype text,
+			"doi_variation" oftype text,
+			"original_sentence" oftype text,
+			"property_type" oftype PropertyType,
+		];
+	}
+
+	block RefractiveIndicesAndDielectricConstantsDatabaseLoader oftype SQLiteLoader {
+		table: "RefractiveIndicesAndDielectricConstants";
+		file: "./RefractiveIndicesAndDielectricConstants.sqlite";
+	}
+}

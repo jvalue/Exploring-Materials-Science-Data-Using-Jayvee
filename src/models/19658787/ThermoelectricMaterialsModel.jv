@@ -1,0 +1,203 @@
+/*
+The datasets used in this data engineering pipeline were taken from the paper Sierepeklis, O., & Cole, J. M. (2022). A thermoelectric materials database auto-generated from the scientific literature using ChemDataExtractor. Scientific Data, 9(1), 648. This is the first 
+automatically generated database of thermoelectric materials and their properties from existing literature. The database was evaluated to have a precision of 82.25%. Here we have 2 datasets, one is the Main dataset
+that contains all the properties of the thermoelectric-materials: "main_tedb.csv" and the other one contains the machine learning predictions of the ZT, Termal conductivity, Seebeck coefcient, Electrical conductivity
+& Power factor.
+
+The inf_tedb.csv has 18509 columns before this data pipeline & 18336 columns after the execution of the pipeline. The main_tedb.csv database had 19707 before & 14617 rows after the execution. The main difference in the 
+count of the rows is because a lot of the values in the main_tedb dataset was misplaced in different columns. As a result, after standardisation, all those records were filtered out. For example, temperature value
+was in ZT column and vice-versa. The changes that we introduced are changing a lot of dataypes, from text to appropriate ones. All the datatypes were text before. Secondly, we introduced a lot of constraints according to the
+theory of the paper, like we created an allow list for the models as well as model types, the temperature and the Access types. And we also standardized the doi format in this pipeline: 10.xxxx/yyyy.
+
+We also added transform blocks to remove the opening and closing braces from the Value column, so that it can be later treated as a numerical value, rather than a text. More details about all the changes have been
+mentioned right before the code that causes the change.
+*/
+
+// The standard format of doi in this paper and in general is 10.xxxx/xxxx, and we have kept that as a regexconstraint for the doi columns.
+
+use {
+	RemoveOpeningBrace,
+	RemoveClosingBrace
+} from "./../../shared/transforms.jv";
+
+
+/*
+According to the paper, Each record contains a chemical entity and one of the seminal thermoelectric properties: thermoelectric fgure of merit, ZT; thermal conductivity, κ; Seebeck coefcient, S;
+electrical conductivity, σ; power factor, PF. Hence, we set an AllowConstraint on model.
+*/
+constraint AllowedModels oftype AllowlistConstraint {
+	allowlist: [
+		"Conductivity",
+		"ThermCond",
+		"Seebeck",
+		"PF",
+		"ZT"
+	];
+}
+valuetype Model oftype text {
+	constraints: [
+		AllowedModels
+	];
+}
+
+/*
+The built-in framework of ChemDataExtractor was used to defne the necessary models types. The thermal conductivity has been mentioned to be only in (total, electronic, and lattice contributions). 
+refer to the paper (page: 3)
+*/
+constraint AllowedModelTypes oftype AllowlistConstraint {
+	allowlist: [
+		"electronic",
+		"lattice",
+		"total"
+	];
+}
+valuetype ModelType oftype text {
+	constraints: [
+		AllowedModelTypes
+	];
+}
+
+
+// Access type is about the reference of the row. It can be either paid or open datasource. According to the paper, we have kept it open and payment. 
+constraint AllowedAccessTypes oftype AllowlistConstraint {
+	allowlist: [
+		"open",
+		"payment"
+	];
+}
+valuetype AccessType oftype text {
+	constraints: [
+		AllowedAccessTypes
+	];
+}
+
+
+pipeline ThermoelectricMaterialsPipeline {
+
+	ThermoelectricMaterialsExtractor
+		-> ZipArchiveInterpreter
+		-> InfThermoelectricMaterialsCSVPicker
+		-> InfThermoelectricMaterialsTextFileInterpreter
+		-> InfThermoelectricMaterialsCSVInterpreter
+		-> InfThermoelectricMaterialsTableInterpreter
+		-> InfThermoelectricMaterialsDatabaseLoader;
+	ZipArchiveInterpreter
+		-> MainThermoelectricMaterialsCSVPicker
+		-> MainThermoelectricMaterialsTextFileInterpreter
+		-> MainThermoelectricMaterialsCSVInterpreter
+		-> MainThermoelectricMaterialsTableInterpreter
+		-> OpeningBracesRemover
+		-> ClosingBracesRemover
+		-> MainThermoelectricMaterialsDatabaseLoader;
+
+	block ThermoelectricMaterialsExtractor oftype HttpExtractor {
+		url: "https://figshare.com/ndownloader/files/36554916";
+	}
+
+	block ZipArchiveInterpreter oftype ArchiveInterpreter {
+		archiveType: "zip";
+	}
+
+	block InfThermoelectricMaterialsCSVPicker oftype FilePicker {
+		path: "/TE_databases/CSV/inf_tedb.csv";
+	}
+
+	block MainThermoelectricMaterialsCSVPicker oftype FilePicker {
+		path: "/TE_databases/CSV/main_tedb.csv";
+	}
+
+	block InfThermoelectricMaterialsTextFileInterpreter oftype TextFileInterpreter { }
+
+	block MainThermoelectricMaterialsTextFileInterpreter oftype TextFileInterpreter { }
+
+	block InfThermoelectricMaterialsCSVInterpreter oftype CSVInterpreter {
+		delimiter: ",";
+	}
+
+	block MainThermoelectricMaterialsCSVInterpreter oftype CSVInterpreter {
+		delimiter: ",";
+	}
+
+	block OpeningBracesRemover oftype TableTransformer {
+		inputColumns: [
+			'Value'
+		];
+		outputColumn: 'Value';
+		uses: RemoveOpeningBrace;
+	}
+
+	block ClosingBracesRemover oftype TableTransformer {
+		inputColumns: [
+			'Value'
+		];
+		outputColumn: 'Value';
+		uses: RemoveClosingBrace;
+	}
+
+	block InfThermoelectricMaterialsTableInterpreter oftype TableInterpreter {
+		header: true;
+		columns: [
+			"Name" oftype text,
+			"Temperature_Value" oftype decimal,
+			"ZT" oftype text,
+			"PF" oftype text,
+			"S^2" oftype text,
+			"s" oftype text,
+			"k" oftype text,
+			"Original_Counts" oftype integer,
+			"New_Counts" oftype integer,
+			"Inference" oftype text,
+			"Editing" oftype text,
+			"Pressure" oftype text,
+			"Process" oftype text,
+			"Label" oftype text,
+			"Direction_of_Measurement" oftype text,
+			"DOI" oftype DOI,
+			"Publisher" oftype text,
+			"Access_Type" oftype text,
+			"Publication_Year" oftype integer,
+			"Authors" oftype text,
+			"Journal" oftype text,
+			"Comparison" oftype text,
+		];
+	}
+
+	block MainThermoelectricMaterialsTableInterpreter oftype TableInterpreter {
+		header: true;
+		columns: [
+			"Name" oftype text,
+			"Label" oftype text,
+			"Editing" oftype text,
+			"Model" oftype Model,
+			"Model_Type" oftype text,
+			"Specifier" oftype text,
+			"Value" oftype text,
+			"Units" oftype text,
+			"Temperature_Value" oftype text,
+			"Temperature_Units" oftype TemperatureUnitKelvin,
+			"Value_Average" oftype text,
+			"Temperature_Average" oftype decimal,
+			"Pressure" oftype text,
+			"Process" oftype text,
+			"Direction_of_Measurement" oftype text,
+			"Resolution" oftype text,
+			"DOI" oftype DOI,
+			"Title" oftype text,
+			"Access_Type" oftype text,
+			"Publisher" oftype text,
+			"Publication_Year" oftype integer,
+			"Authors" oftype text,
+			"Journal" oftype text,
+		];
+	}
+
+	block InfThermoelectricMaterialsDatabaseLoader oftype SQLiteLoader {
+		table: "InfThermoelectricMaterials";
+		file: "./ThermoelectricMaterials.sqlite";
+	}
+
+	block MainThermoelectricMaterialsDatabaseLoader oftype SQLiteLoader {
+		table: "MainThermoelectricMaterials";
+		file: "./ThermoelectricMaterials.sqlite";
+	}
+}

@@ -1,0 +1,163 @@
+// XSLXInterpeter does not work, see https://github.com/jvalue/jayvee/issues/603
+
+pipeline ThermoElectricMaterialsPipeline {
+	ThermoElectricMaterialsESTMExtractor
+		-> ThermoElectricMaterialsESTMXLSXInterpreter
+		-> ThermoElectricMaterialsESTMSheetPicker
+		-> ThermoElectricMaterialsESTMTableInterpreter
+		-> ThermoElectricMaterialsESTMDatabaseLoader;
+
+	ThermoElectricMaterialsPredsSxgbExtractor
+		-> ThermoElectricMaterialsPredsSxgbXLSXInterpreter
+		-> ThermoElectricMaterialsPredsSxgbSheetPicker
+		-> ThermoElectricMaterialsPredsSxgbTableInterpreter
+		-> ThermoElectricMaterialsPredsSxgbDatabaseLoader;
+
+	ThermoElectricMaterialsExtrapol0Extractor
+		-> ThermoElectricMaterialsExtrapol0XLSXInterpreter
+		-> ThermoElectricMaterialsExtrapol0SheetPicker
+		-> ThermoElectricMaterialsExtrapol0TableInterpreter
+		-> ThermoElectricMaterialsExtrapol0DatabaseLoader;
+
+	ThermoElectricMaterialsExtrapol1Extractor
+		-> ThermoElectricMaterialsExtrapol1XLSXInterpreter
+		-> ThermoElectricMaterialsExtrapol1SheetPicker
+		-> ThermoElectricMaterialsExtrapol1TableInterpreter
+		-> ThermoElectricMaterialsExtrapol1DatabaseLoader;
+
+	ThermoElectricMaterialsExtrapol2Extractor
+		-> ThermoElectricMaterialsExtrapol2XLSXInterpreter
+		-> ThermoElectricMaterialsExtrapol2SheetPicker
+		-> ThermoElectricMaterialsExtrapol2TableInterpreter
+		-> ThermoElectricMaterialsExtrapol2DatabaseLoader;
+
+	block ThermoElectricMaterialsESTMExtractor oftype HttpExtractor {
+		url: "https://github.com/KRICT-DATA/SIMD/raw/main/dataset/estm.xlsx";
+	}
+
+	block ThermoElectricMaterialsPredsSxgbExtractor oftype HttpExtractor {
+		url: "https://github.com/KRICT-DATA/SIMD/raw/main/results/preds_sxgb.xlsx";
+	}
+
+	block ThermoElectricMaterialsExtrapol0Extractor oftype HttpExtractor {
+		url: "https://github.com/KRICT-DATA/SIMD/raw/main/results/results_extrapol_0.xlsx";
+	}
+
+	block ThermoElectricMaterialsExtrapol1Extractor oftype HttpExtractor {
+		url: "https://github.com/KRICT-DATA/SIMD/raw/main/results/results_extrapol_1.xlsx";
+	}
+
+	block ThermoElectricMaterialsExtrapol2Extractor oftype HttpExtractor {
+		url: "https://github.com/KRICT-DATA/SIMD/raw/main/results/results_extrapol_2.xlsx";
+	}
+
+	block ThermoElectricMaterialsESTMXLSXInterpreter oftype XLSXInterpreter { }
+
+	block ThermoElectricMaterialsPredsSxgbXLSXInterpreter oftype XLSXInterpreter { }
+
+	block ThermoElectricMaterialsExtrapol0XLSXInterpreter oftype XLSXInterpreter { }
+
+	block ThermoElectricMaterialsExtrapol1XLSXInterpreter oftype XLSXInterpreter { }
+
+	block ThermoElectricMaterialsExtrapol2XLSXInterpreter oftype XLSXInterpreter { }
+
+	block ThermoElectricMaterialsESTMSheetPicker oftype SheetPicker {
+		sheetName: "Sheet1";
+	}
+
+	block ThermoElectricMaterialsPredsSxgbSheetPicker oftype SheetPicker {
+		sheetName: "Sheet1";
+	}
+
+	block ThermoElectricMaterialsExtrapol0SheetPicker oftype SheetPicker {
+		sheetName: "Sheet1";
+	}
+
+	block ThermoElectricMaterialsExtrapol1SheetPicker oftype SheetPicker {
+		sheetName: "Sheet1";
+	}
+
+	block ThermoElectricMaterialsExtrapol2SheetPicker oftype SheetPicker {
+		sheetName: "Sheet1";
+	}
+
+
+	block ThermoElectricMaterialsESTMTableInterpreter oftype TableInterpreter {
+		header: true;
+		columns: [
+			'Formula' oftype text,
+			'temperature(K)' oftype text,
+			'seebeck_coefficient(<span style="font-family: 맑은 고딕;font-size: 15px;">μ</span><span style="font-family: 맑은 고딕;font-size: 15px;">V/K)</span>' oftype text,
+			'electrical_conductivity(S/m)' oftype text,
+			'thermal_conductivity(W/mK)' oftype text,
+			'power_factor(W/mK<span style="font-family: 맑은 고딕;font-size: 15px;">2</span><span style="font-family: 맑은 고딕;font-size: 15px;">)</span>' oftype text,
+			'ZT' oftype text,
+			'reference' oftype text,
+		];
+	}
+
+	block ThermoElectricMaterialsPredsSxgbTableInterpreter oftype TableInterpreter {
+		header: false;
+		columns: [
+			"Col1" oftype text,
+			"Col2" oftype text,
+			"Col3" oftype text,
+			"Col4" oftype text,
+		];
+	}
+
+	block ThermoElectricMaterialsExtrapol0TableInterpreter oftype TableInterpreter {
+		header: false;
+		columns: [
+			"Col1" oftype text,
+			"Col2" oftype text,
+			"Col3" oftype text,
+			"Col4" oftype text,
+		];
+	}
+
+	block ThermoElectricMaterialsExtrapol1TableInterpreter oftype TableInterpreter {
+		header: false;
+		columns: [
+			"Col1" oftype text,
+			"Col2" oftype text,
+			"Col3" oftype text,
+			"Col4" oftype text,
+		];
+	}
+
+	block ThermoElectricMaterialsExtrapol2TableInterpreter oftype TableInterpreter {
+		header: false;
+		columns: [
+			"Col1" oftype text,
+			"Col2" oftype text,
+			"Col3" oftype text,
+			"Col4" oftype text,
+		];
+	}
+
+	block ThermoElectricMaterialsESTMDatabaseLoader oftype SQLiteLoader {
+		table: "ESTM";
+		file: "./ThermoElectricMaterialsDatabase.sqlite";
+	}
+
+	block ThermoElectricMaterialsPredsSxgbDatabaseLoader oftype SQLiteLoader {
+		table: "PredsSxgb";
+		file: "./ThermoElectricMaterialsDatabase.sqlite";
+	}
+
+	block ThermoElectricMaterialsExtrapol0DatabaseLoader oftype SQLiteLoader {
+		table: "Extrapol0";
+		file: "./ThermoElectricMaterialsDatabase.sqlite";
+	}
+
+	block ThermoElectricMaterialsExtrapol1DatabaseLoader oftype SQLiteLoader {
+		table: "Extrapol1";
+		file: "./ThermoElectricMaterialsDatabase.sqlite";
+	}
+
+	block ThermoElectricMaterialsExtrapol2DatabaseLoader oftype SQLiteLoader {
+		table: "Extrapol2";
+		file: "./ThermoElectricMaterialsDatabase.sqlite";
+	}
+}

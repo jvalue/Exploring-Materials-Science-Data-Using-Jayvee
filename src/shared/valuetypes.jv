@@ -1,0 +1,24 @@
+// Either Mega- or Giga-Pascal, as per paper
+constraint MPaOrGPaConstraint on text: value matches /\(10\^[6|9]\.0\) \* Pascal\^\(1\.0\)/;
+publish valuetype PressureUnit oftype text {
+	constraints: [
+		MPaOrGPaConstraint
+	];
+}
+
+// Either Micro-/Nano- or Pico-Meters, as per paper
+constraint MiMNMorPMConstraint on text: value matches /\(10\^-[3|6|9]\.0\) \* Meter\^\(1\.0\)/;
+publish valuetype LengthUnit oftype text {
+	constraints: [
+		MiMNMorPMConstraint
+	];
+}
+
+// Remove once https://github.com/jvalue/jayvee/issues/602 is fixed
+constraint DateFormatYYYYMMDDRegex on text: value matches /\d{4}-\d{2}-\d{2}/;
+/** DateFormat as YYYY-MM-DD */
+publish valuetype DateYYYYMMDD oftype text {
+	constraints: [
+		DateFormatYYYYMMDDRegex
+	];
+}

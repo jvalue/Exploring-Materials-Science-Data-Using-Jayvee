@@ -1,0 +1,161 @@
+use {
+	RemoveOpeningParenthesis,
+	RemoveClosingParenthesis,
+	RemoveOpeningBrace,
+	RemoveClosingBrace,
+	RemoveSingleQuote,
+	TakeUntilComma,
+	ParseDecimal
+} from "./transforms.jv";
+
+publish composite blocktype DecimalParser {
+	input WithTextColumn oftype Table;
+	output WithDecimalColumn oftype Table;
+
+	property columnName oftype text;
+
+	WithTextColumn
+		-> DecimalParserBlock
+		-> WithDecimalColumn;
+
+	block DecimalParserBlock oftype TableTransformer {
+		inputColumns: [
+			columnName
+		];
+		outputColumn: columnName;
+
+		uses: ParseDecimal;
+	}
+}
+
+publish composite blocktype UntilCommaTaker {
+	input WithColumnWithComma oftype Table;
+	output WithColumnWithoutComma oftype Table;
+
+	property columnWithComma oftype text;
+
+	WithColumnWithComma
+		-> UntilCommaTakerBlock
+		-> WithColumnWithoutComma;
+
+	block UntilCommaTakerBlock oftype TableTransformer {
+		inputColumns: [
+			columnWithComma
+		];
+		outputColumn: columnWithComma;
+
+		uses: TakeUntilComma;
+	}
+}
+
+publish composite blocktype ParenthesesRemover {
+	input WithColumnWithParentheses oftype Table;
+	output WithColumnWithoutParentheses oftype Table;
+
+	property columnWithParentheses oftype text;
+
+	WithColumnWithParentheses
+		-> OpenParenthesisRemoverBlock
+		-> ClosingParenthesisRemoverBlock
+		-> WithColumnWithoutParentheses;
+
+	block OpenParenthesisRemoverBlock oftype TableTransformer {
+		inputColumns: [
+			columnWithParentheses
+		];
+		outputColumn: columnWithParentheses;
+
+		uses: RemoveOpeningParenthesis;
+	}
+
+	block ClosingParenthesisRemoverBlock oftype TableTransformer {
+		inputColumns: [
+			columnWithParentheses
+		];
+		outputColumn: columnWithParentheses;
+
+		uses: RemoveClosingParenthesis;
+	}
+}
+
+publish composite blocktype BracesRemover {
+	input WithColumnWithBraces oftype Table;
+	output WithColumnWithoutBraces oftype Table;
+
+	WithColumnWithBraces
+		-> OpenBraceRemoverBlock
+		-> CloseBraceRemoverBlock
+		-> WithColumnWithoutBraces;
+
+	property columnWithBraces oftype text;
+
+	block OpenBraceRemoverBlock oftype TableTransformer {
+		inputColumns: [
+			columnWithBraces
+		];
+		outputColumn: columnWithBraces;
+
+		uses: RemoveOpeningBrace;
+	}
+
+	block CloseBraceRemoverBlock oftype TableTransformer {
+		inputColumns: [
+			columnWithBraces
+		];
+		outputColumn: columnWithBraces;
+
+		uses: RemoveClosingBrace;
+	}
+}
+
+publish composite blocktype SingleQuoteRemover {
+	input WithColumnWithSingleQuotes oftype Table;
+	output WithColumnWithoutSingleQuotes oftype Table;
+
+	WithColumnWithSingleQuotes
+		-> FirstSingleQuoteRemoverBlock
+		-> SecondSingleQuoteRemoverBlock
+		-> WithColumnWithoutSingleQuotes;
+
+	property columnWithSingleQuotes oftype text;
+
+	block FirstSingleQuoteRemoverBlock oftype TableTransformer {
+		inputColumns: [
+			columnWithSingleQuotes
+		];
+		outputColumn: columnWithSingleQuotes;
+
+		uses: RemoveSingleQuote;
+	}
+
+
+	block SecondSingleQuoteRemoverBlock oftype TableTransformer {
+		inputColumns: [
+			columnWithSingleQuotes
+		];
+		outputColumn: columnWithSingleQuotes;
+
+		uses: RemoveSingleQuote;
+	}
+}
+
+publish composite blocktype BracesAndSingleQuotesRemover {
+	input BracesAndQuotes oftype Table;
+	output NoBracesAndQuotes oftype Table;
+
+	BracesAndQuotes
+		-> BRBlock
+		-> SQRBlock
+		-> NoBracesAndQuotes;
+
+	property columnName oftype text;
+
+	block BRBlock oftype BracesRemover {
+		columnWithBraces: columnName;
+	}
+
+
+	block SQRBlock oftype SingleQuoteRemover {
+		columnWithSingleQuotes: columnName;
+	}
+}

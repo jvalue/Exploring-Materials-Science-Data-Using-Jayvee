@@ -1,0 +1,344 @@
+/*
+ * This pipeline has been designed in accordance to the paper cited as "Kumar, P., Kabra, S., & Cole, J. M. (2022). auto-generating databases of Yield Strength and Grain Size using ChemDataExtractor.
+ * Scientific Data, 9(1), 292." This paper studies the use of the ’materials-aware’ text-mining toolkit, ChemDataExtractor, to auto-generate databases of yieldstrength and grain-size values by extracting
+ * such information from the literature. The precision of the extracted data is 83.0% for yield strength and 78.8% for grain size. The automatically-extracted data were organised into 4 databases:
+ *
+ * Database 1: YieldStrength_Database includes data about yield strength.
+ * Database 2: GrainSize_Database includes data about grain size.
+ * Database 3: EngineeringReady_YieldStrength_Database.
+ * Database 4: Combined_YieldStrength_GrainSize_Database has a subset of columns from DB1 and DB2.
+*/
+
+
+use {
+	LengthUnit,
+	PressureUnit,
+	DateYYYYMMDD
+} from "./../../shared/valuetypes.jv";
+use {
+	DecimalParser,
+	BracesRemover,
+	SingleQuoteRemover,
+	BracesAndSingleQuotesRemover
+} from "./../../shared/composite-blocktypes.jv";
+use {
+	TakeUntilComma,
+	ParseDecimal
+} from "./../../shared/transforms.jv";
+
+// Parsing Method is allowed to be only Text Parsing or Table Parsing according to the source paper.
+constraint AllowedParsingMethodList on text: value in [
+	"Text Parsing",
+	"Table Parsing"
+];
+valuetype ParsingMethod oftype text {
+	constraints:
+	[
+		AllowedParsingMethodList
+	];
+}
+
+
+pipeline YieldStrengthAndGrainSizePipeline {
+
+	FileExtractor
+		-> ZipInterpreter
+		-> CombinedCSVPicker
+		-> CombinedTextFileInterpreter
+		-> CombinedCSVInterpreter
+		-> CombinedTableInterpreter
+		-> CompinedCompoundSanatizer
+		-> CombinedGrainSizeValueSanatizer
+		-> CombinedFirstGrainSizeValue
+		-> CombinedGrainSizeValueParser
+		-> CombinedYieldStrengthValueSanatizer
+		-> CombinedFirstYieldStrengthValue
+		-> CombinedYieldStrengthValueParser
+		-> CombinedLoader;
+
+	ZipInterpreter
+		-> EngineeringReadyYieldStrengthCSVPicker
+		-> EngineeringReadyYieldStrengthTextFileInterpreter
+		-> EngineeringReadyYieldStrengthCSVInterpreter
+		-> EngineeringReadyYieldStrengthTableInterpreter
+		-> EngineeringReadyCompoundSanatizer
+		-> EngineeringReadyAuthorSanatizer
+		-> EngineeringReadyYieldStrengthLoader;
+
+	ZipInterpreter
+		-> GrainSizeCSVPicker
+		-> GrainSizeTextFileInterpreter
+		-> GrainSizeCSVInterpreter
+		-> GrainSizeRenamer
+		-> GrainSizeTableInterpreter
+		-> GrainSizeCompoundSanatizer
+		-> GrainSizeAuthorSanatizer
+		-> GrainSizeLoader;
+
+	ZipInterpreter
+		-> YieldStrengthCSVPicker
+		-> YieldStrengthTextFileInterpreter
+		-> YieldStrengthCSVInterpreter
+		-> YieldStrengthRenamer
+		-> YieldStrengthTableInterpreter
+		-> YieldStrengthCompoundSanatizer
+		-> YieldStrengthAuthorSanatizer
+		-> YieldStrengthLoader;
+
+	block FileExtractor oftype HttpExtractor {
+		url: "https://figshare.com/ndownloader/files/31626647";
+	}
+
+	block ZipInterpreter oftype ArchiveInterpreter {
+		archiveType: "zip";
+	}
+
+	block CombinedCSVPicker oftype FilePicker {
+		path: "/Databases/Combined/Combined_YieldStrength_GrainSize_Database.csv";
+	}
+
+	block EngineeringReadyYieldStrengthCSVPicker oftype FilePicker {
+		path: "/Databases/Engineering_Ready_YS/EngineeringReady_YieldStrength_Database.csv";
+	}
+
+	block GrainSizeCSVPicker oftype FilePicker {
+		path: "/Databases/GS/GrainSize_Database.csv";
+	}
+
+	block YieldStrengthCSVPicker oftype FilePicker {
+		path: "/Databases/YS/YieldStrength_Database.csv";
+	}
+
+	block CombinedTextFileInterpreter oftype TextFileInterpreter { }
+	block EngineeringReadyYieldStrengthTextFileInterpreter oftype TextFileInterpreter { }
+	block GrainSizeTextFileInterpreter oftype TextFileInterpreter { }
+	block YieldStrengthTextFileInterpreter oftype TextFileInterpreter { }
+
+	block CombinedCSVInterpreter oftype CSVInterpreter {
+		delimiter: ",";
+		enclosing: '"';
+		enclosingEscape: '"';
+	}
+	block EngineeringReadyYieldStrengthCSVInterpreter oftype CSVInterpreter {
+		delimiter: ",";
+		enclosing: '"';
+		enclosingEscape: '"';
+	}
+	block GrainSizeCSVInterpreter oftype CSVInterpreter {
+		delimiter: ",";
+		enclosing: '"';
+		enclosingEscape: '"';
+	}
+	block YieldStrengthCSVInterpreter oftype CSVInterpreter {
+		delimiter: ",";
+		enclosing: '"';
+		enclosingEscape: '"';
+	}
+
+	block GrainSizeRenamer oftype CellWriter {
+		at: range C1:E1;
+		write: [
+			'Old Value',
+			'Units',
+			'Value'
+		];
+	}
+
+	block YieldStrengthRenamer oftype CellWriter {
+		at: range C1:E1;
+		write: [
+			'Old Value',
+			'Units',
+			'Value'
+		];
+	}
+
+	block CombinedTableInterpreter oftype TableInterpreter {
+		header: true;
+		columns: [
+			"Compound" oftype text,
+			"Blacklisted Compound?" oftype boolean,
+			"Yield Strength Value" oftype text, // Includes braces
+			"Yield Strength Unit" oftype PressureUnit,
+			"Grain Size Value" oftype text, // Includes braces
+			"Grain Size Unit" oftype LengthUnit,
+			"DOI" oftype DOI,
+			"Open Access" oftype boolean,
+		];
+	}
+
+	block EngineeringReadyYieldStrengthTableInterpreter oftype TableInterpreter {
+		header: true;
+		columns: [
+			"Compound" oftype text,
+			"Blacklisted Compound?" oftype boolean,
+			"Value" oftype decimal,
+			"Units" oftype PressureUnit,
+			// "Raw Value" oftype decimal,
+			// "Raw Units" oftype text, // Should only have MPa and GPa as values but are noisy 
+			"Parsing Method" oftype ParsingMethod,
+			"DOI" oftype DOI,
+			"Article Title" oftype text,
+			"Author" oftype text,
+			"Journal" oftype text,
+			"Date" oftype DateYYYYMMDD,
+			"Open Access" oftype boolean,
+		];
+	}
+
+	block GrainSizeTableInterpreter oftype TableInterpreter {
+		header: true;
+		columns: [
+			"Compound" oftype text,
+			"Blacklisted Compound?" oftype boolean,
+			"Value" oftype decimal,
+			"Units" oftype LengthUnit,
+			// "Raw Value" oftype decimal,
+			// "Raw Units" oftype GrainRawUnits, // Should only be ["µm", "nm", "pm"] but is noisy
+			"Parsing Method" oftype ParsingMethod,
+			"DOI" oftype DOI,
+			"Article Title" oftype text,
+			"Author" oftype text,
+			"Journal" oftype text,
+			"Date" oftype DateYYYYMMDD,
+			"Open Access" oftype boolean,
+		];
+	}
+
+	block YieldStrengthTableInterpreter oftype TableInterpreter {
+		header: true;
+		columns: [
+			"Compound" oftype text,
+			"Blacklisted Compound?" oftype boolean,
+			"Value" oftype decimal,
+			"Units" oftype PressureUnit,
+			// "Raw Value" oftype decimal,
+			// "Raw Units" oftype RawUnits, // Should only be ["MPa", "GPa"] but is noisy
+			"Parsing Method" oftype ParsingMethod,
+			"DOI" oftype DOI,
+			"Article Title" oftype text,
+			"Author" oftype text,
+			"Journal" oftype text,
+			"Date" oftype DateYYYYMMDD,
+			"Open Access" oftype boolean,
+		];
+	}
+
+	block CompinedCompoundSanatizer oftype BracesRemover {
+		columnWithBraces: "Compound";
+	}
+
+	block CombinedGrainSizeValueSanatizer oftype BracesRemover {
+		columnWithBraces: "Grain Size Value";
+	}
+
+	// FIXME: use this block instead if `FirstGrainSizeValue` when https://github.com/jvalue/jayvee/issues/591 is
+	// fixed
+	block BROKENCombinedGrainSizeValueParser oftype DecimalParser {
+		columnName: "Grain Size Value";
+	}
+
+	// INFO: Cells like "11.0, 34.6" will become "11.0"
+	// According to the article:
+	// "In cases where more than one value is extracted, when a range of values is extracted for example, Value
+	// will be a list."
+	// This makes the possibility that the values are minimum and maximum much less likely, so it's reasonable to
+	// just pick the first one
+	block CombinedFirstGrainSizeValue oftype TableTransformer {
+		inputColumns: [
+			"Grain Size Value"
+		];
+		outputColumn: "Grain Size Value";
+
+		uses: TakeUntilComma;
+	}
+
+	block CombinedGrainSizeValueParser oftype TableTransformer {
+		inputColumns: [
+			"Grain Size Value"
+		];
+		outputColumn: "Grain Size Value";
+
+		uses: ParseDecimal;
+	}
+
+
+	block CombinedYieldStrengthValueSanatizer oftype BracesRemover {
+		columnWithBraces: "Yield Strength Value";
+	}
+
+	// FIXME: use this block instead if `FirstGrainSizeValue` when https://github.com/jvalue/jayvee/issues/591 is
+	// fixed
+	block BROKENYieldStrengthValue oftype DecimalParser {
+		columnName: "Yield Strength Value";
+	}
+
+	// INFO: Cells like "11.0, 34.6" will become "11.0"
+	// According to the article:
+	// "In cases where more than one value is extracted, when a range of values is extracted for example, Value
+	// will be a list."
+	// This makes the possibility that the values are minimum and maximum much less likely, so it's reasonable to
+	// just pick the first one
+	block CombinedFirstYieldStrengthValue oftype TableTransformer {
+		inputColumns: [
+			"Yield Strength Value"
+		];
+		outputColumn: "Yield Strength Value";
+
+		uses: TakeUntilComma;
+	}
+
+	block CombinedYieldStrengthValueParser oftype TableTransformer {
+		inputColumns: [
+			"Yield Strength Value"
+		];
+		outputColumn: "Yield Strength Value";
+
+		uses: ParseDecimal;
+	}
+
+
+	block CombinedLoader oftype SQLiteLoader {
+		table: "Combined";
+		file: "./YieldStrengthAndGrainSize.sqlite";
+	}
+
+	block EngineeringReadyCompoundSanatizer oftype BracesRemover {
+		columnWithBraces: "Compound";
+	}
+
+	block EngineeringReadyAuthorSanatizer oftype BracesAndSingleQuotesRemover {
+		columnName: "Author";
+	}
+
+	block EngineeringReadyYieldStrengthLoader oftype SQLiteLoader {
+		table: "EngineeringReadyYieldStrength";
+		file: "./YieldStrengthAndGrainSize.sqlite";
+	}
+
+	block GrainSizeCompoundSanatizer oftype BracesRemover {
+		columnWithBraces: "Compound";
+	}
+
+	block GrainSizeAuthorSanatizer oftype BracesAndSingleQuotesRemover {
+		columnName: "Author";
+	}
+
+	block GrainSizeLoader oftype SQLiteLoader {
+		table: "GrainSize";
+		file: "./YieldStrengthAndGrainSize.sqlite";
+	}
+
+	block YieldStrengthCompoundSanatizer oftype BracesRemover {
+		columnWithBraces: "Compound";
+	}
+
+	block YieldStrengthAuthorSanatizer oftype BracesAndSingleQuotesRemover {
+		columnName: "Author";
+	}
+
+	block YieldStrengthLoader oftype SQLiteLoader {
+		table: "YieldStrength";
+		file: "./YieldStrengthAndGrainSize.sqlite";
+	}
+}

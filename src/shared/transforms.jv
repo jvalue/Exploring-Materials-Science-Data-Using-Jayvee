@@ -1,0 +1,55 @@
+// Transformer to remove the opening parenthesis ("(")
+publish transform RemoveOpeningParenthesis {
+	from valueWithParen oftype text;
+	to valueWithoutParen oftype text;
+
+	valueWithoutParen: valueWithParen replace /\(/ with "";
+}
+
+// Transformer to remove the closing parenthesis (")")
+publish transform RemoveClosingParenthesis {
+	from valueWithParen oftype text;
+	to valueWithoutParen oftype text;
+
+	valueWithoutParen: valueWithParen replace /\)/ with "";
+}
+
+// Transformer to remove the opening braces ("[")
+publish transform RemoveOpeningBrace {
+	from valueWithBraces oftype text;
+	to valueWithoutBraces oftype text;
+
+	valueWithoutBraces: valueWithBraces replace /\[/ with "";
+}
+
+// Transformer to remove the closing braces ("]")
+publish transform RemoveClosingBrace {
+	from valueWithBraces oftype text;
+	to valueWithoutBraces oftype text;
+
+	valueWithoutBraces: valueWithBraces replace /\]/ with "";
+}
+
+// Drop everything after a comma (",") including the comma itself
+publish transform TakeUntilComma {
+	from textWithComma oftype text;
+	to textWithoutComma oftype text;
+
+	textWithoutComma: textWithComma replace /,.*$/ with "";
+}
+
+// parse a decimal
+publish transform ParseDecimal {
+	from decText oftype text;
+	to dec oftype decimal;
+
+	dec: asDecimal decText;
+}
+
+// Transformer to remove single quote ("'")
+publish transform RemoveSingleQuote {
+	from valueWithSQ oftype text;
+	to valueWithoutSQ oftype text;
+
+	valueWithoutSQ: valueWithSQ replace /\'/ with "";
+}
