@@ -18,50 +18,50 @@ jobs:
         run: npm install -g @jvalue/jayvee-interpreter@0.6.0
 
       - name: Run and zip model
-        run: bash -x tools/scripts/process-model.bash src/models/11888115/BatteryMaterialsModel.jv
+        run: bash -x tools/scripts/process-model.bash src/models/battery-materials/BatteryMaterialsModel.jv
       - name: Upload result
-        run: bash -x tools/scripts/release-model.bash build/11888115.zip
+        run: bash -x tools/scripts/release-model.bash build/battery-materials.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_REF: ${{ github.ref }}
 
       - name: Run and zip model
-        run: bash -x tools/scripts/process-model.bash src/models/12781142/refractiveIndicesAndDielectricConstantsModel.jv
+        run: bash -x tools/scripts/process-model.bash src/models/refractive-indices-dielectric-constants/refractiveIndicesAndDielectricConstantsModel.jv
       - name: Upload result
-        run: bash -x tools/scripts/release-model.bash build/12781142.zip
+        run: bash -x tools/scripts/release-model.bash build/refractive-indices-dielectric-constants.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_REF: ${{ github.ref }}
 
       - name: Run and zip model
-        run: bash -x tools/scripts/process-model.bash src/models/14079863/SemiconductorBandGapsModel.jv
+        run: bash -x tools/scripts/process-model.bash src/models/semiconductor-band-gaps/SemiconductorBandGapsModel.jv
       - name: Upload result
-        run: bash -x tools/scripts/release-model.bash build/14079863.zip
+        run: bash -x tools/scripts/release-model.bash build/semiconductor-band-gaps.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_REF: ${{ github.ref }}
 
       - name: Run and zip model
-        run: bash -x tools/scripts/process-model.bash src/models/14946186/YieldStrengthAndGrainSizeModel.jv
+        run: bash -x tools/scripts/process-model.bash src/models/yield-strength-grain-size/YieldStrengthAndGrainSizeModel.jv
       - name: Upload result
-        run: bash -x tools/scripts/release-model.bash build/14946186.zip
+        run: bash -x tools/scripts/release-model.bash build/yield-strength-grain-size.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_REF: ${{ github.ref }}
 
       - name: Run and zip model
-        run: bash -x tools/scripts/process-model.bash src/models/19658787/ThermoelectricMaterialsModel.jv
+        run: bash -x tools/scripts/process-model.bash src/models/thermoelectric-materials/ThermoelectricMaterialsModel.jv
       - name: Upload result
-        run: bash -x tools/scripts/release-model.bash build/19658787.zip
+        run: bash -x tools/scripts/release-model.bash build/thermoelectric-materials.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_REF: ${{ github.ref }}
 
       # This model does not work, see https://github.com/jvalue/jayvee/issues/603
       #- name: Run and zip model
-      #  run: bash -x tools/scripts/process-model.bash src/models/KRICT_DATA/thermoelectricMaterials.jv && tools/scripts/process-model.bash src/models/KRICT_DATA/thermoelectricMaterialsModel.jv
+      #  run: bash -x tools/scripts/process-model.bash src/models/thermoelectric-materials-system-identified-material-representation/thermoelectricMaterials.jv && tools/scripts/process-model.bash src/models/KRICT_DATA/thermoelectricMaterialsModel.jv
       #- name: Upload result
-      #  run: bash -x tools/scripts/release-model.bash build/KRICT_DATA.zip
+      #  run: bash -x tools/scripts/release-model.bash build/thermoelectric-materials-system-identified-material-representation.zip
       #  env:
       #    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #    RELEASE_REF: ${{ github.ref }}
