@@ -1,15 +1,3 @@
-/*
- * This pipeline has been designed in accordance to the paper cited as "Kumar, P., Kabra, S., & Cole, J. M. (2022). auto-generating databases of Yield Strength and Grain Size using ChemDataExtractor.
- * Scientific Data, 9(1), 292." This paper studies the use of the ’materials-aware’ text-mining toolkit, ChemDataExtractor, to auto-generate databases of yieldstrength and grain-size values by extracting
- * such information from the literature. The precision of the extracted data is 83.0% for yield strength and 78.8% for grain size. The automatically-extracted data were organised into 4 databases:
- *
- * Database 1: YieldStrength_Database includes data about yield strength.
- * Database 2: GrainSize_Database includes data about grain size.
- * Database 3: EngineeringReady_YieldStrength_Database.
- * Database 4: Combined_YieldStrength_GrainSize_Database has a subset of columns from DB1 and DB2.
-*/
-
-
 use {
 	LengthUnit,
 	PressureUnit,
@@ -32,15 +20,12 @@ constraint AllowedParsingMethodList on text: value in [
 	"Table Parsing"
 ];
 valuetype ParsingMethod oftype text {
-	constraints:
-	[
+	constraints: [
 		AllowedParsingMethodList
 	];
 }
 
-
 pipeline YieldStrengthAndGrainSizePipeline {
-
 	FileExtractor
 		-> ZipInterpreter
 		-> CombinedCSVPicker
