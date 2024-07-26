@@ -1,25 +1,7 @@
-/*
-This database is created from the paper cited as "Huang, S., & Cole, J. M. (2020). A database of battery materials auto-generated using ChemDataExtractor. Scientific Data, 7(1), 260." The database of battery materials is presented 
-which comprises a total of 292,313 data records, with 214,617 unique chemical-property data relations between 17,354 unique chemicals and up to five material properties: capacity, voltage, conductivity, coulombic efficiency and energy. 
-117,403 data are multivariate on a property where it is the dependent variable in part of a data series.
-
-In this paper, we had 2 databases: "battery.csv" & "battery_merged.csv". According to page no. 10 in the original paper, the "battery.csv" database is the fully processed database contains a total number of 292,313 records. This comprises a total of 214,617 unique pair-wise data relations; 
-thus, 77,696 of the data extracted from the literature have redundancy. These redundancies have been removed in the battery_merged.csv, otherwise the rest of the data is the same. Hence, for our data engineering pipeline, we have used
-the "battery_merged.csv" dataset.
-
-We have introduced various types of changes like standardizing the pattern in DOI Format, add a constraint on attribute named "Property" for the values to be within the mentioned list from the paper, 
-standardizing Date format to "YYYY-MM-DD" pattern. One important change that we have introduced is we have created a transform block and a Table transformer, that creates a new boolean column named "Calculated_Data". When the value of the "Tag" column
-is "Calculated", the "Calculated_Data" will be True, otherwise False.
-
-Before our data engineering pipeline, there were 214620 records in the dataset, and after our pipeline, the number of records significantly reduce to 128061. This change occurs due to all the steps in our pipeline
-& majorly due to standardizing the Date column, as many of the values in that column were null.
-*/
-
 use {
 	DateYYYYMMDD
 } from "./../../shared/valuetypes.jv";
 
-// Transformation of Tag column for more comprehension and understanding of data
 transform TagToBoolCalculated {
 	from tag oftype text;
 	to bool oftype boolean;
@@ -27,8 +9,7 @@ transform TagToBoolCalculated {
 	bool: tag == "Calculated";
 }
 
-// Limiting values to the only possible and to expect according to the paper.
-// => deleting none/null rows that may alter the quality of the data
+// Limiting values to the only possible and to expect according to the paper
 constraint TagProperty on text: value in [
 	"CDE",
 	"Calculated"
@@ -39,7 +20,7 @@ valuetype Tag oftype text {
 	];
 }
 
-// According to the 1st page of the paper, the below five material properties are only allowed.
+// According to the 1st page of the paper, only these material properties are allowed
 constraint PropertyValue on text: value in [
 	"Conductivity",
 	"Energy",
@@ -53,7 +34,6 @@ valuetype Property oftype text {
 	];
 }
 
-//Pipeline block with data pipeline logic
 pipeline BatteryMaterialsPipeline {
 
 	BatteryMaterialsExtractor
